@@ -1,32 +1,32 @@
 #!/usr/bin/env python
-#------------------------- Imports --------------------------
+# ------------------------- Imports --------------------------
 import rospy
 from geometry_msgs.msg import Twist
 import sys
 
-#------------------------ Variables -------------------------
+# ------------------------ Variables -------------------------
 rospy.init_node("foward_t")
 
 # Velocity publisher
 vel_cmd = Twist()
-pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
+pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
 # Frequency
 rate = rospy.Rate(60)
 
-#------------------------ Functions -------------------------
+# ------------------------ Functions -------------------------
 def end_callback():
-    """Callback on shutdown
-
-    """
+    """Callback on shutdown"""
     # Stop Gothmog
     vel_cmd.linear.x = 0.0
     vel_cmd.angular.z = 0.0
     pub.publish(vel_cmd)
 
+
 rospy.on_shutdown(end_callback)
 
-def run(verbose = False):
+
+def run(verbose=False):
     """Move Gothmog in a straight line for 10 seconds
 
     Args:
@@ -34,7 +34,7 @@ def run(verbose = False):
 
     """
     # Initiate node
-    
+
     if verbose:
         print("foward_t node initialized, master.")
 
@@ -72,11 +72,12 @@ def run(verbose = False):
     except rospy.exceptions.ROSInterruptException:
         pass
 
-#--------------------------- Main ---------------------------
+
+# --------------------------- Main ---------------------------
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "--verbose":
-            run(verbose = True)
+            run(verbose=True)
         else:
             print("Wrong usage")
             print("Expecting: foward_t --verbose")
