@@ -59,13 +59,13 @@ def run(verbose = False):
 
             # While time is not over run
             if verbose:
-                print(str(tf - t0) + "seconds have passed, master.")
+                print(str(tf - t0) + " seconds have passed, master.")
 
             v = 0.4
             w = 0.0
             vel_cmd.linear.x = v
             vel_cmd.angular.z = w
-            pub.publis(vel_cmd)
+            pub.publish(vel_cmd)
 
             rate.sleep()
 
