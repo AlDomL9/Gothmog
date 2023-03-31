@@ -1,0 +1,2 @@
+odometry:puzzlebot_autostart:ros-deep-learning:square:vision
+-DCATKIN_DEVEL_PREFIX=/home/puzzlebot/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/puzzlebot/catkin_ws/install -G Unix Makefiles
