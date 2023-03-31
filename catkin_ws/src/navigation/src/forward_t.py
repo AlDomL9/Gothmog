@@ -61,7 +61,7 @@ def run(verbose=False):
             if verbose:
                 print(str(tf - t0) + " seconds have passed, master.")
 
-            v = 0.4
+            v = 0.1
             w = 0.0
             vel_cmd.linear.x = v
             vel_cmd.angular.z = w
