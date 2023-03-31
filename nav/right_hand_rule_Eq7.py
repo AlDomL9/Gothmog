@@ -1,9 +1,12 @@
 #!/usr/bin/env python
+"""---------- Imports -----------"""
 import sys
 import numpy as np
 import rospy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
+
+"""---------- Classes -----------"""
 
 
 class RightHandRuleController:
@@ -32,7 +35,7 @@ class RightHandRuleController:
         """Called when a new scan is available from the lidar."""
         self.scan = msg
 
-    def go_to_wall(self):
+    def go_to_wall(self):  #! Unused
         """Go straight ahead until at desired distance from a wall."""
         # --------------------------------------------------------------
         # Your code here
@@ -60,19 +63,16 @@ class RightHandRuleController:
                     self.scan, np.pi / 2 - 4 * np.pi / 180, np.pi / 2
                 )
 
-                P_orientation = 1
-                P_distance = 0.005
-                P_front = 0.1
-                P_v = 0.2
+                # Controller gains
+                P_orientation = 1  # To keep the robot parallel to the wall
+                P_front = 0.1  # To make the robot turn left when it encounters a corner
+                P_v = 0.2  # To keep the robot at a fixed distance from the front wall
+
                 err_orientation = find_wall_direction(self.scan)
-                print("err_orientation", err_orientation)
-                err_distance = self.wall_dist - distance_to_right
                 err_front = max(distance_ahead - self.wall_dist, 1e-20)
-                w = min(
+                w = min(  # To make sure that w is within the limits
                     max(
-                        err_orientation * P_orientation
-                        # + err_distance * P_distance
-                        + P_front / err_front,
+                        err_orientation * P_orientation + P_front / err_front,
                         -self.w_max,
                     ),
                     self.w_max,
@@ -88,6 +88,9 @@ class RightHandRuleController:
                 self.vel_pub.publish(msg)
 
             self.rate.sleep()
+
+
+"""--------- Functions ----------"""
 
 
 def get_distance_in_sector(scan, start_angle, end_angle):
@@ -125,42 +128,13 @@ def get_distance_in_sector(scan, start_angle, end_angle):
     # 1) Find the indices into scan.ranges corresponding to the start_ange and end_angle
     # 2) Compute the average range in the sector using np.mean()
     # --------------------------------------------------------------
-    # start_index = None
-    # end_index = None
-    # for i in range(num_scans + 1):
-    #     if (
-    #         start_index is None
-    #         and abs(scan.angle_min + i * scan.angle_increment - start_angle) < 1e-6
-    #     ):
-    #         start_index = i
-    #     if (
-    #         end_index is None
-    #         and abs(scan.angle_min + i * scan.angle_increment - end_angle) < 1e-6
-    #     ):
-    #         end_index = i
-    #     if start_index is not None and end_index is not None:
-    #         break
-
-    # err_msg = None
-    # if start_index is None:
-    #     if err_msg is None:
-    #         err_msg = "start_angle is out of range"
-    #     else:
-    #         err_msg += " and start_angle is out of range"
-    # if end_index is None:
-    #     if err_msg is None:
-    #         err_msg = "end_angle is out of range"
-    #     else:
-    #         err_msg += " and end_angle is out of range"
-
-    # if err_msg is not None:
-    #     raise ValueError(err_msg)
-
-    angles = np.arange(
+    angles = np.arange(  # Get all the angles in the scan
         scan.angle_min, scan.angle_max + scan.angle_increment, scan.angle_increment
     )
-    start_index = np.argmin(np.abs(angles - start_angle))
-    end_index = np.argmin(np.abs(angles - end_angle))
+    start_index = np.argmin(
+        np.abs(angles - start_angle)
+    )  # Find angle closest to start_angle
+    end_index = np.argmin(np.abs(angles - end_angle))  # Find angle closest to end_angle
 
     return np.mean(scan.ranges[start_index:end_index])
 
@@ -180,33 +154,28 @@ def find_wall_direction(scan):
     """
     # --------------------------------------------------------------
     # Your code here
-    # incremet_amount = 160  # 40 deg
-    # print("scan.angle_increment", scan.angle_increment)
-    # alpha = incremet_amount * scan.angle_increment
-    angle_B = -np.pi / 2
-    angle_C = angle_B + (40 * np.pi / 180)
-    print("angle_B", angle_B * 180 / np.pi)
-    print("angle_C", angle_C * 180 / np.pi) 
-    angles = np.arange(
+    angle_B = -np.pi / 2  # Full right
+    angle_C = angle_B + (40 * np.pi / 180)  # 40 degrees to the left of full right
+    angles = np.arange(  # Get all the angles in the scan
         scan.angle_min, scan.angle_max + scan.angle_increment, scan.angle_increment
     )
-    B_index = np.argmin(np.abs(angles - angle_B))
-    C_index = np.argmin(np.abs(angles - angle_C))
+    B_index = np.argmin(np.abs(angles - angle_B))  # Find angle closest to angle_B
+    C_index = np.argmin(np.abs(angles - angle_C))  # Find angle closest to angle_C
+
+    # Cosine rule to find the angle between the robot and the wall
     B = scan.ranges[B_index]
     C = scan.ranges[C_index]
     alpha = angle_B - angle_C
-    A2 = B ** 2 + C ** 2 - 2 * B * C * np.cos(alpha)
+    A2 = B**2 + C**2 - 2 * B * C * np.cos(alpha)
     phi = np.arccos((B**2 + A2 - C**2) / (2 * B * np.sqrt(A2)))
-    print("C", C)
-    print("B", B)
-    print("phi", phi * 180 / np.pi)
 
+    # So error is 0 when robot is parallel to wall and negative when robot is heading away from wall
     return (np.pi / 2) - phi
     # --------------------------------------------------------------
     # --------------------------------------------------------------
 
 
-def range_index(scan, angle):
+def range_index(scan, angle):  #! Unused
     """Returns the index into the scan ranges that correspond to the angle given (in rad).
     If the angle is out of range, then simply the first (0) or last index is returned, no
     exception is raised.
@@ -236,7 +205,7 @@ def range_index(scan, angle):
     # --------------------------------------------------------------
 
 
-def generate_test_scan(straight_wall=False):
+def generate_test_scan(straight_wall=False):  #! Only for testing
     """Function used for testing. Will create and return a LaserScan message"""
     scan = LaserScan()
     scan.angle_min = -np.pi / 2
@@ -256,14 +225,16 @@ def generate_test_scan(straight_wall=False):
     return scan
 
 
+"""------------ Main ------------"""
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 1:  # For testing
         if sys.argv[1] == "--test":
             import doctest
 
             doctest.testmod()
             sys.exit(0)
 
+    # Actual main
     rospy.init_node("Follow right hand wall")
     rhw = RightHandRuleController()
     rhw.follow_right_hand_wall()
