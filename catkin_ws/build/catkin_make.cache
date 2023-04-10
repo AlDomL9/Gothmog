@@ -1,2 +1,2 @@
-navigation
+kinematics:navigation:puzzlebot_control:puzzlebot_gazebo:puzzlebot_world
 -DCATKIN_DEVEL_PREFIX=/home/alejandro/Documentos/802/Gothmog/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/alejandro/Documentos/802/Gothmog/catkin_ws/install -G Unix Makefiles
